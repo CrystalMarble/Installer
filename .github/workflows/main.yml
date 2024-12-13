@@ -1,6 +1,5 @@
-name: Build .NET 8 App
-permissions:
-  contents: write
+name: .NET Core Desktop
+
 on:
   push:
     branches:
@@ -13,26 +12,44 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
 
+    runs-on:
+      windows-latest # For a list of available runner types, refer to
+      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
+    env:
+      Solution_Name: Installer.sln # Replace with your solution name, i.e. MyWpfApp.sln
+      Project_Name: "Installer\\Installer.csproj"
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.x
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+          fetch-depth: 0
+
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v3
         with:
-          nuget-version: "latest"
-        
-      - name: Build Solution
-        run: |
-          dotnet --version
-          dotnet build ./Installer/Installer.csproj --configuration Release --framework net8.0
+          dotnet-version: 8.0.x
+
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1
+
+      # Restore the application to populate the obj folder with RuntimeIdentifiers
+      - name: Restore the application
+        run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{ matrix.configuration }}
+
+      - name: Build
+        run: msbuild $env:Project_Name /p:Configuration=$env:Configuration
+        env:
+          Configuration: ${{matrix.configuration}}
+
       - name: Copy necessary files to release
         run: |
           mkdir Release
