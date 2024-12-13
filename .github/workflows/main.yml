@@ -1,4 +1,4 @@
-name: Build .NET 4.8 App
+name: Build .NET 8 App
 permissions:
   contents: write
 on:
@@ -32,7 +32,7 @@ jobs:
       - name: Build Solution
         run: |
           dotnet --version
-          dotnet build ./Installer.sln --configuration Release --framework net8.0
+          dotnet build ./Installer/Installer.csproj --configuration Release --framework net8.0
       - name: Copy necessary files to release
         run: |
           mkdir Release
