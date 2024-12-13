@@ -30,7 +30,9 @@ jobs:
           nuget-version: "latest"
         
       - name: Build Solution
-        run: msbuild ./Installer/Installer.csproj /p:Configuration=Release
+        run: |
+          dotnet --version
+          dotnet build ./Installer.sln --configuration Release --framework net8.0
       - name: Copy necessary files to release
         run: |
           mkdir Release
